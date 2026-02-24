@@ -1,55 +1,37 @@
 import re
+
 from textnode import TextNode, TextType
+
+
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.TEXT)]
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    return nodes
 
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
     for old_node in old_nodes:
-        # We only split nodes that are of type TEXT
         if old_node.text_type != TextType.TEXT:
             new_nodes.append(old_node)
             continue
-        
         split_nodes = []
         sections = old_node.text.split(delimiter)
-        
-        # If the length is even, it means a delimiter was not closed
-        # e.g. "text **bold" splits into ["text ", "bold"] (length 2)
         if len(sections) % 2 == 0:
-            raise ValueError(f"Invalid markdown: matching delimiter '{delimiter}' not found")
-        
+            raise ValueError("invalid markdown, formatted section not closed")
         for i in range(len(sections)):
             if sections[i] == "":
                 continue
             if i % 2 == 0:
-                # Even indices are the text outside the delimiters
                 split_nodes.append(TextNode(sections[i], TextType.TEXT))
             else:
-                # Odd indices are the text inside the delimiters
                 split_nodes.append(TextNode(sections[i], text_type))
-        
         new_nodes.extend(split_nodes)
-        
     return new_nodes
-
-
-def extract_markdown_images(text):
-    """
-    Extracts markdown images: ![alt text](url)
-    Returns a list of tuples: [("alt text", "url"), ...]
-    """
-    pattern = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
-    return re.findall(pattern, text)
-
-
-def extract_markdown_links(text):
-    """
-    Extracts markdown links: [anchor text](url)
-    Uses a negative lookbehind to ensure it doesn't catch images.
-    Returns a list of tuples: [("anchor text", "url"), ...]
-    """
-    pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
-    return re.findall(pattern, text)
 
 
 def split_nodes_image(old_nodes):
@@ -58,26 +40,27 @@ def split_nodes_image(old_nodes):
         if old_node.text_type != TextType.TEXT:
             new_nodes.append(old_node)
             continue
-        
         original_text = old_node.text
         images = extract_markdown_images(original_text)
-        
         if len(images) == 0:
             new_nodes.append(old_node)
             continue
-            
-        for image_alt, image_link in images:
-            sections = original_text.split(f"![{image_alt}]({image_link})", 1)
+        for image in images:
+            sections = original_text.split(f"![{image[0]}]({image[1]})", 1)
             if len(sections) != 2:
-                raise ValueError("Invalid markdown, image section not found")
+                raise ValueError("invalid markdown, image section not closed")
             if sections[0] != "":
                 new_nodes.append(TextNode(sections[0], TextType.TEXT))
-            new_nodes.append(TextNode(image_alt, TextType.IMAGE, image_link))
+            new_nodes.append(
+                TextNode(
+                    image[0],
+                    TextType.IMAGE,
+                    image[1],
+                )
+            )
             original_text = sections[1]
-        
         if original_text != "":
             new_nodes.append(TextNode(original_text, TextType.TEXT))
-            
     return new_nodes
 
 
@@ -87,24 +70,31 @@ def split_nodes_link(old_nodes):
         if old_node.text_type != TextType.TEXT:
             new_nodes.append(old_node)
             continue
-        
         original_text = old_node.text
         links = extract_markdown_links(original_text)
-        
         if len(links) == 0:
             new_nodes.append(old_node)
             continue
-            
-        for link_text, link_url in links:
-            sections = original_text.split(f"[{link_text}]({link_url})", 1)
+        for link in links:
+            sections = original_text.split(f"[{link[0]}]({link[1]})", 1)
             if len(sections) != 2:
-                raise ValueError("Invalid markdown, link section not found")
+                raise ValueError("invalid markdown, link section not closed")
             if sections[0] != "":
                 new_nodes.append(TextNode(sections[0], TextType.TEXT))
-            new_nodes.append(TextNode(link_text, TextType.LINK, link_url))
+            new_nodes.append(TextNode(link[0], TextType.LINK, link[1]))
             original_text = sections[1]
-            
         if original_text != "":
             new_nodes.append(TextNode(original_text, TextType.TEXT))
-            
     return new_nodes
+
+
+def extract_markdown_images(text):
+    pattern = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    matches = re.findall(pattern, text)
+    return matches
+
+
+def extract_markdown_links(text):
+    pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    matches = re.findall(pattern, text)
+    return matches
