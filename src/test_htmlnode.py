@@ -27,6 +27,17 @@ class TestHTMLNode(unittest.TestCase):
         expected = "HTMLNode(tag=h1, value=Hello, children=None, props=None)"
         self.assertEqual(repr(node), expected)
 
+    def test_values(self):
+        node = HTMLNode(
+            "div",
+            "Here is the text"
+        )
+        self.assertEqual(node.tag, "div")
+        self.assertEqual(node.value, "Here is the text")
+        self.assertEqual(node.children, None)
+        self.assertEqual(node.props, None,)
+
+
 
 class TestLeafNode(unittest.TestCase):
     def test_leaf_to_html_p(self):

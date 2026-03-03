@@ -2,6 +2,10 @@ class HTMLNode:
 
     def __init__(self, tag=None, value=None, children=None, props=None):
         """
+            Represents a node in an HTML document tree. 
+            Can be block level or inline
+            Designed to only output HTML
+
             tag:    string representing the HTML tag name (e.g. "p", "a")
             value:  string representing the value of the HTML tag
                     (e.g. the text inside a paragraph)
@@ -20,13 +24,13 @@ class HTMLNode:
     
     def props_to_html(self):
         """Returns a string representing HTML attributes."""
-        if self.props is None or len(self.props) == 0:
+        if self.props is None:
             return ""
 
         props_str = ""
         for key, value in self.props.items():
             """ Leading space is important. HTML attributes are 
-                always separated by spces.
+                always separated by spaces.
             """
             props_str += f' {key}="{value}"'
         return props_str
