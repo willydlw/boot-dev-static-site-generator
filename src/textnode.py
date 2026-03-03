@@ -23,6 +23,7 @@ class TextNode:
                 self.url == other.url)
 
     def __repr__(self):
+        # get string representation of enum text_type by using .value field
         return f"TextNode({self.text}, {self.text_type.value}, {self.url})"
 
 
