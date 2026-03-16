@@ -5,11 +5,16 @@ from textnode import TextNode, TextType, text_node_to_html_node
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
+        # create two TextNode objects with same properties and assert
+        # the objects are equal
+        # url should have a default of None since argument is missing
         node = TextNode("This is a text node", TextType.BOLD)
         node2 = TextNode("This is a text node", TextType.BOLD)
         self.assertEqual(node, node2)
 
     def test_neq_text_content(self):
+        # create two TextNode objects with different text properties 
+        # and assert they are not equal
         node = TextNode("This is a text node", TextType.BOLD)
         node2 = TextNode("This is a different text", TextType.BOLD)
         self.assertNotEqual(node, node2)
