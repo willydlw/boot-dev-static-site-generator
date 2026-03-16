@@ -1,6 +1,8 @@
 import os 
 import shutil 
 
+from gencontent import generate_page, extract_title
+
 def copy_static_to_public(source, destination):
     # 1. clean the destination 
     if os.path.exists(destination):
@@ -31,11 +33,23 @@ def _copy_recursive(src, dst):
             _copy_recursive(src_path, dst_path)
 
 def main():
-    print("Copying static files to public directory...")
-    copy_static_to_public("static", "public")
+    # 1. Clean and Copy static assets 
+    source_static = "static"
+    destination_public = "public"
 
-    # Later, you'll add your markdown_to_html_node logic here 
-    # to generate the actual index.html file!
+    print("Cleaning and copying static files...")
+    copy_static_to_public(source_static, destination_public)
+
+    # 2. Generate the index page 
+    from_path = "content/index.md"
+    template_path = "template.html"
+    dest_path = "public/index.html"
+
+    print(f"Generating page from {from_path} to {dest_path}...")
+    generate_page(from_path, template_path, dest_path)
+
+    print("Build complete!")
+
 
 if __name__ == "__main__":
     main()
